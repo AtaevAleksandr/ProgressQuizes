@@ -1,60 +1,70 @@
 import SwiftUI
 
 struct GraphicsView: View {
-    @EnvironmentObject var viewModel: LearnViewModel
+
+    @EnvironmentObject var learnVM: LearnViewModel
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Длина стрелок
-                let maxArrowLength: CGFloat = min(geometry.size.width, geometry.size.height) / 3 - 30
-                let arrowLengthRetail = maxArrowLength * CGFloat(viewModel.completedRetailsLessons + 2) / CGFloat(viewModel.totalRetailsLessons)
-                let arrowLengthAnalysis = maxArrowLength * CGFloat(viewModel.completedAnalysisLessons + 2) / CGFloat(viewModel.totalAnalysisLessons)
-                let arrowLengthBasics = maxArrowLength * CGFloat(viewModel.completedBasicsLessons + 2) / CGFloat(viewModel.totalBasicsLessons)
-                let arrowLengthLines = maxArrowLength * CGFloat(viewModel.completedLinesLessons + 1) / CGFloat(viewModel.totalLinesLessons)
+                let arrowLength: CGFloat = min(geometry.size.width, geometry.size.height) / 4
+                let pointSize: CGFloat = 15
 
                 let midX = geometry.size.width / 2
                 let midY = geometry.size.height / 2
 
-                // Рисуем ромб, соединяя концы стрелок
+                let backgroundWidth = arrowLength * 2
+                let backgroundHeight = arrowLength * 2
+
+                let retailProgress = CGFloat(self.learnVM.completedRetailsLessons) / CGFloat(self.learnVM.totalRetailsLessons)
+                let analysisProgress = CGFloat(self.learnVM.completedAnalysisLessons) / CGFloat(self.learnVM.totalAnalysisLessons)
+                let basicsProgress = CGFloat(self.learnVM.completedBasicsLessons) / CGFloat(self.learnVM.totalBasicsLessons)
+                let linesProgress = CGFloat(self.learnVM.completedLinesLessons) / CGFloat(self.learnVM.totalLinesLessons)
+
+                RoundedRectangle(cornerRadius: 10)
+                    .foregroundColor(Color.theme.backgroundGraph) // Цвет заливки ромба
+                    .frame(width: backgroundWidth, height: backgroundHeight)
+                    .position(x: midX, y: midY)
+                    .rotationEffect(Angle(degrees: 45))
+                    .scaleEffect(0.85)
+
+                // Draw inner rhombus
                 Path { path in
-                    path.move(to: CGPoint(x: midX, y: midY - arrowLengthRetail - 5)) // верхняя точка
-                    path.addLine(to: CGPoint(x: midX + arrowLengthLines + 5, y: midY)) // правая точка
-                    path.addLine(to: CGPoint(x: midX, y: midY + arrowLengthAnalysis + 5)) // нижняя точка
-                    path.addLine(to: CGPoint(x: midX - arrowLengthBasics - 5, y: midY)) // левая точка
+                    path.move(to: CGPoint(x: midX, y: midY - arrowLength * retailProgress))
+                    path.addLine(to: CGPoint(x: midX + arrowLength * linesProgress, y: midY))
+                    path.addLine(to: CGPoint(x: midX, y: midY + arrowLength * analysisProgress))
+                    path.addLine(to: CGPoint(x: midX - arrowLength * basicsProgress, y: midY))
                     path.closeSubpath()
                 }
-                .fill(Color.theme.backgroundGraph)
-                .scaleEffect(1.05)
+                .fill(Color.cyan.opacity(0.6))
+                .scaleEffect(0.9)// Change color as desired
 
-                // Рисуем стрелки
-                Arrow(arrowLength: arrowLengthRetail, direction: .up)
+                // Рисуем стрелки с треугольниками на концах
+                Arrow(arrowLength: arrowLength, direction: .up)
                     .stroke(Color.white, lineWidth: 3)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-
-                Arrow(arrowLength: arrowLengthLines, direction: .right)
+                    .background(Triangle().rotation(Angle(degrees: 180)).fill(Color.white).frame(width: 12, height: 12).position(x: midX, y: midY - backgroundHeight / 2))
+                Arrow(arrowLength: arrowLength, direction: .right)
                     .stroke(Color.white, lineWidth: 3)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-
-                Arrow(arrowLength: arrowLengthAnalysis, direction: .down)
+                    .background(Triangle().rotation(Angle(degrees: 270)).fill(Color.white).frame(width: 12, height: 12).position(x: midX + backgroundWidth / 2, y: midY))
+                Arrow(arrowLength: arrowLength, direction: .down)
                     .stroke(Color.white, lineWidth: 3)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-
-                Arrow(arrowLength: arrowLengthBasics, direction: .left)
+                    .background(Triangle().fill(Color.white).frame(width: 12, height: 12).position(x: midX, y: midY + backgroundHeight / 2))
+                Arrow(arrowLength: arrowLength, direction: .left)
                     .stroke(Color.white, lineWidth: 3)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .background(Triangle().rotation(Angle(degrees: 90)).fill(Color.white).frame(width: 12, height: 12).position(x: midX - backgroundWidth / 2, y: midY))
 
                 // Рисуем центральную точку
                 Circle()
-                    .fill(Color.theme.customGreen)
-                    .frame(width: 30, height: 30)
+                    .fill(Color.green)
+                    .frame(width: pointSize, height: pointSize)
                     .position(x: midX, y: midY)
 
+                // Retail Forex Industry
                 Text("Retail Forex Industry")
                     .foregroundColor(Color.white)
-                    .position(x: geometry.size.width / 2, y: (geometry.size.height / 2) - arrowLengthRetail - 20)
+                    .position(x: midX, y: midY - backgroundHeight / 2 - 20)
                     .offset(x: 0, y: -20)
-                    .font(.caption)
+                    .font(.headline)
 
                 // Chart Basics
                 VStack {
@@ -62,9 +72,9 @@ struct GraphicsView: View {
                     Text("Basics")
                 }
                 .foregroundColor(Color.white)
-                .position(x: (geometry.size.width / 2) - arrowLengthBasics - 20, y: geometry.size.height / 2)
+                .position(x: midX - backgroundWidth / 2 - 40, y: midY)
                 .offset(x: -20, y: 0)
-                .font(.caption)
+                .font(.headline)
 
                 // Chart Lines
                 VStack {
@@ -72,16 +82,16 @@ struct GraphicsView: View {
                     Text("Lines")
                 }
                 .foregroundColor(Color.white)
-                .position(x: (geometry.size.width / 2) + arrowLengthLines + 20, y: geometry.size.height / 2)
+                .position(x: midX + backgroundWidth / 2 + 30, y: midY)
                 .offset(x: 20, y: 0)
-                .font(.caption)
+                .font(.headline)
 
                 // Analysis Basics
                 Text("Analysis Basics")
                     .foregroundColor(Color.white)
-                    .position(x: geometry.size.width / 2, y: (geometry.size.height / 2) + arrowLengthAnalysis + 20)
+                    .position(x: midX, y: midY + backgroundHeight / 2 + 20)
                     .offset(x: 0, y: 20)
-                    .font(.caption)
+                    .font(.headline)
             }
         }
     }
@@ -101,47 +111,55 @@ struct Arrow: Shape {
         let centerX = rect.midX
         let centerY = rect.midY
 
+        // Расчет конечных точек для стрелок
+        let startPoint: CGPoint
+        let endPoint: CGPoint
+
         switch direction {
         case .up:
-            path.move(to: CGPoint(x: centerX, y: centerY))
-            path.addLine(to: CGPoint(x: centerX, y: centerY - arrowLength))
-            path.move(to: CGPoint(x: centerX, y: centerY - arrowLength))
-            path.addLine(to: CGPoint(x: centerX - 5, y: centerY - arrowLength + 10))
-            path.move(to: CGPoint(x: centerX, y: centerY - arrowLength))
-            path.addLine(to: CGPoint(x: centerX + 5, y: centerY - arrowLength + 10))
+            startPoint = CGPoint(x: centerX, y: centerY)
+            endPoint = CGPoint(x: centerX, y: centerY - arrowLength)
 
         case .down:
-            path.move(to: CGPoint(x: centerX, y: centerY))
-            path.addLine(to: CGPoint(x: centerX, y: centerY + arrowLength))
-            path.move(to: CGPoint(x: centerX, y: centerY + arrowLength))
-            path.addLine(to: CGPoint(x: centerX - 5, y: centerY + arrowLength - 10))
-            path.move(to: CGPoint(x: centerX, y: centerY + arrowLength))
-            path.addLine(to: CGPoint(x: centerX + 5, y: centerY + arrowLength - 10))
+            startPoint = CGPoint(x: centerX, y: centerY)
+            endPoint = CGPoint(x: centerX, y: centerY + arrowLength)
 
         case .left:
-            path.move(to: CGPoint(x: centerX, y: centerY))
-            path.addLine(to: CGPoint(x: centerX - arrowLength, y: centerY))
-            path.move(to: CGPoint(x: centerX - arrowLength, y: centerY))
-            path.addLine(to: CGPoint(x: centerX - arrowLength + 10, y: centerY - 5))
-            path.move(to: CGPoint(x: centerX - arrowLength, y: centerY))
-            path.addLine(to: CGPoint(x: centerX - arrowLength + 10, y: centerY + 5))
+            startPoint = CGPoint(x: centerX, y: centerY)
+            endPoint = CGPoint(x: centerX - arrowLength, y: centerY)
 
         case .right:
-            path.move(to: CGPoint(x: centerX, y: centerY))
-            path.addLine(to: CGPoint(x: centerX + arrowLength, y: centerY))
-            path.move(to: CGPoint(x: centerX + arrowLength, y: centerY))
-            path.addLine(to: CGPoint(x: centerX + arrowLength - 10, y: centerY - 5))
-            path.move(to: CGPoint(x: centerX + arrowLength, y: centerY))
-            path.addLine(to: CGPoint(x: centerX + arrowLength - 10, y: centerY + 5))
+            startPoint = CGPoint(x: centerX, y: centerY)
+            endPoint = CGPoint(x: centerX + arrowLength, y: centerY)
         }
+
+        // Рисуем линию
+        path.move(to: startPoint)
+        path.addLine(to: endPoint)
 
         return path
     }
 }
 
-#Preview {
-    ZStack {
-        BackgroundView()
-        GraphicsView().environmentObject(LearnViewModel())
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+
+        return path
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ZStack {
+            BackgroundView()
+            GraphicsView()
+        }
+        .environmentObject(LearnViewModel())
     }
 }
